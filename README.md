@@ -24,7 +24,7 @@ This section will detail the process pre and post the installation of Docker. Th
 
 2. Create environment variables and symbolic links
 
-    Create/Open config fie for your shell. Bash uses .bash_profile, so I used this. These are suggestions you can name your variables whatever you like. $E stands for external and $EHOME for external home.
+    Create/Open config file for your shell. Bash uses .bash_profile, so I used this. These are suggestions you can name your variables whatever you like. $E stands for external and $EHOME for external home.
 
     ``` bash
     ## Env variables
@@ -34,7 +34,7 @@ This section will detail the process pre and post the installation of Docker. Th
     ## Symbolic links
 
     # Create a symlink to External Drive to preserve internal drive.
-    ln -s $EHOME/⁨Library⁩/⁨Containers⁩/com.docker.docker /Users/wattry/Library/Containers
+    ln -s $EHOME/⁨Library⁩/⁨Containers⁩/com.docker.docker /Users/<user>/Library/Containers
     
     ```
 
