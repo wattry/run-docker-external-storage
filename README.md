@@ -6,6 +6,8 @@ This solution was suggested in this "[Docker Forum Post](https://forums.docker.c
 ## Limitations 
 The limited to MacOS 10.14: Mojave+ and with Docket Desktop. This tutorial assumes that the file locations are the same as the default locations used by Docker on macOS. Please create an issue if this does not work with a version of macOS or Docker.
 
+*Docker will not start if your external storage is formatted with FAT or exFAT you should use a APFS disk.* See [issue](https://github.com/wattry/run-docker-external-storage/issues/8). Use diskutil to reformat your disk before you continue.
+
 ## Setup 
 This section will detail the process pre and post the installation of Docker
 
