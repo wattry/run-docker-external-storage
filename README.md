@@ -1,69 +1,73 @@
 # Run Docker External Storage in macOS 10.13+
-Docker can be useful to test projects without having to install software locally to test components. However, it is resource hungry. Newer machines with smaller internal storage provide a challenge to developers. This tutorial will explain how to setup an external disk to store docker images and containers.
+Docker can be used to test projects without having to install and orchestrate software locally. However, if you're running a setup with a smaller internal drive it can be useful to move these stores externally. Newer Macs with smaller internal storage ~~soldered to the board~~ provide a challenge to developers. This tutorial will explain how to setup an external disk to store docker images and containers.
 
-This solution was suggested in this [Docker Forum Post](https://forums.docker.com/t/change-docker-image-directory-for-mac/18891/8)
+This solution was suggested in this "[Docker Forum Post](https://forums.docker.com/t/change-docker-image-directory-for-mac/18891/8)"
 
 ## Limitations 
-The limitations of this tutorial are that it is only applicable to macOS and specific the following to versions: 10.13: High Sierra (Lobo) and 10.14: Mojave. Part of this would assume that the file locations are the same as macOS docker defaults.
+The limited to MacOS 10.14: Mojave+ and with Docket Desktop. This tutorial assumes that the file locations are the same as the default locations used by Docker on macOS. Please create an issue if this does not work with a version of macOS or Docker.
 
 ## Setup 
-This section will detail the process pre and post the installation of Docker. There are a few steps you can go through before you move on.
+This section will detail the process pre and post the installation of Docker
 
-1. Setup your external drive to create symbolic links.
+1. Setup the external drive's symbolic links.
 
-    I prefer to try reproduce my internal storage's file structure to make it easier to access file locations.
+    This step reproduces a similar structure to the internal storage, making it easier to debug or use documentation. You can use whichever directory structure you chose, just ensure you're consistent throughout the tutorial.
 
-    * Using your shell (I use bash) or GUI create navigate to the root your external drive.
+    * Using your shell or GUI create navigate to the root your external drive.
     * Create the following folder structure: 
     
+    ```shell
+     mkdir -p "Users/$(whoami)/Library/Containers"
     ```
-     mkdir -p Users/\<user\>/Library/Containers
-    ```
 
-    The p option on the mkdir command will create the entire path's directory structure.
+    The p option on the mkdir command will, recursively, create the entire path's directory structure.
 
-2. Create environment variables and symbolic links
+1. Create environment variables
+    This step is optional however it will make it easier to reference the external location.
 
-    Create/Open config file for your shell. Bash uses .bash_profile, so I used this. These are suggestions you can name your variables whatever you like. $E stands for external and $EHOME for external home.
+    Create/Open the config file for your shell. Newer Macs will use zsh by default though you will find a .zshrc or .bashrc. You can run `echo $SHELL` to find your default shell. These are suggestions and you can name your variables whatever you like. In this case $E stands for external and $EHOME for external home. These allow you to cd into and have a consistent source of truth, though this step is not required.
 
-    ``` bash
+    ``` shell
     ## Env variables
-    export E=/Volumes/<external-name>
-    export EHOME=$E/$HOME
-    
-    ## Symbolic links
+    export E="/Volumes/<external>"
+    export EHOME="$E/${HOME}"
+    ```
 
+1. Create Symbolic links
+    ``` shell
     # Create a symlink to External Drive to preserve internal drive.
-    ln -s $EHOME/⁨Library⁩/⁨Containers⁩/com.docker.docker /Users/<user>/Library/Containers
-    
+    ln -s "${EHOME}/Library/Containers/com.docker.docker" "/Users/$(whoami)/Library/Containers"
     ```
 
- 3. Then either close and reopen your shell or reload your config with the following command:
+ 1. Then either close and reopen your shell or reload your config with the following command
 
-    ``` bash
-        source .bash_profile
+    ``` shell
+      source .bash_profile
+      or
+      source .bashrc
+      or
+      source .zshrc
     ```
 
-    Now let's test your links and env variables:
-
-    ``` 
+    Test your links and env variables
+    ```shell
     $ echo $E 
-    /Volumes/<external-name>
+    /Volumes/<external>
     $ echo $EHOME
-    /Volumes/<external-name>/Users/<user>
-    $  ls -la /Users/<user>/Library/Containers/com.docker.docker
-    lrwxr-xr-x   1 <user>  staff     74 Dec  1 14:47 com.docker.docker -> /Volumes/<external-name>/Users/<user>/Library/Containers/com.docker.docker
+    /Volumes/<external>/Users/<user>
+    $  ls -la /Users/$(whoami)/Library/Containers/com.docker.docker
+    lrwxr-xr-x   1 <user>  staff     74 Jan  1 00:00 com.docker.docker -> /Volumes/<external>/Users/<user>/Library/Containers/com.docker.docker
     ```
 Your environment should now be ready.
 
 ## Pre Docker Installation 
-1. [Download and install Docker CE for macOS](https://docs.docker.com/docker-for-mac/install/).
+  If you're using homebrew you can run `brew install docker-desktop` or download it [Download and install Docker CE for macOS](https://docs.docker.com/docker-for-mac/install/).
 
 ## Post Docker Install
 
-This set involves either using cp/rsync or mv to get the com.docker.docker directory and content to your external device. I used both, but rsync will transfer the port files which mv will not (mv/cp will throw the following error *"Cannot listen: ~/Library/Containers/com.docker.docker/Data/vms/0/<your file\>: failed bind: Permission denied"*). This will not stop you from copying. You can ignore this as these files are created when the docker daemon starts up. My preference would be to use mv, since it is faster.
+This setup can be performed using cp/rsync or mv to get the com.docker.docker directory and content to your external drive. rsync will transfer the port files which mv will not (mv/cp will throw the following error *"Cannot listen: ~/Library/Containers/com.docker.docker/Data/vms/0/<your file\>: failed bind: Permission denied"*). This will not prevent you from copying as you can ignore this; these files are created when the docker daemon starts up.
 
-1. Find where docker is storing images: 
+1. Find where docker stores images: 
 
     Run the following command to see if Docker is running:
 
@@ -73,12 +77,13 @@ This set involves either using cp/rsync or mv to get the com.docker.docker direc
     1949    0       com.docker.docker.2716
     ```
 
-    1. If docker is not started yet, start it using the application. 
-    2.  Once is is started secondary click on the docker icon in the top right of the screen.
-    3.  Select preferences and select the disk tab. 
-    4.  Type or complete the path up to the com.docker.docker directory part.
-    5.  It should look like this if it has used defaults: 6. *"/Users/\<user\>/Library/Containers/com.docker.docker"*.
-    6.  Stop Docker by secondary clicking on the same docker icon and selecting *"Quit Docker Desktop"*
+    1. If docker is not started yet, start it using the application launcher.
+    1. Once it is running in the task bar secondary click on the docker icon at the top right of the screen.
+    1. Select preferences and select the disk tab.
+    1. Open a new shell
+    1. Type or autocomplete the path up to the com.docker.docker directory part.
+    1. If defaulted it should be located here *"/Users/\<user\>/Library/Containers/com.docker.docker"*.
+    1. Stop Docker by secondary clicking on the docker icon and selecting *"Quit Docker Desktop"*
 
     To check that docker is no longer running use the following command: 
     ```
@@ -86,21 +91,22 @@ This set involves either using cp/rsync or mv to get the com.docker.docker direc
     -       0       com.docker.helper
     ```
 
-2. Use mv or rsync to transfer the files. These steps may take a while to complete, be patient. 
+2. Use mv or rsync to transfer the files. These steps may take a while to complete. Alternatively you can prune all the resources you do not need.
 
 ### Using mv 
 ```
-$  mv -v $HOME/Library/Containers/com.docker.docker $EHOME/Library/Containers
+$  mv -v "${HOME}/Library/Containers/com.docker.docker" "${EHOME}/Library/Containers"
 ```
 
 ### Using rsync 
 ```
-$ rsync -a -v $HOME/Library/Containers/com.docker.docker $EHOME/Library/Containers
+$ rsync -a -v "${HOME}/Library/Containers/com.docker.docker" "${EHOME}/Library/Containers"
 ```
 
 Once this is complete make sure all the files have transferred run this command. If there is no difference there will be no output. If the only are only socket files, you need not worry.
 
 ```
-diff --brief -r $EHOME/Library/Containers/com.docker.docker $HOME/Library/Containers/com.docker.docker
-$   
+diff --brief -r "${EHOME}/Library/Containers/com.docker.docker" "${HOME}/Library/Containers/com.docker.docker"
 ```
+
+You should now be able to use Docker on an external device.
